@@ -21,7 +21,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Connect with bluetooth device"
-        android:id="@+id/Bluetooth_Button"
+        android:id="@+id/OpenBluetoothSettings"
         android:layout_below="@+id/textView"
         android:layout_centerHorizontal="true"
         android:onClick="OpenBluetoothSettings"/>
@@ -31,7 +31,7 @@
         android:layout_height="wrap_content"
         android:id="@+id/Vooruit"
         android:layout_marginTop="50dp"
-        android:layout_below="@+id/Bluetooth_Button"
+        android:layout_below="@+id/OpenBluetoothSettings"
         android:layout_alignStart="@+id/Achteruit"
         android:onClick="VooruitClick" />
 
@@ -59,21 +59,22 @@
         android:layout_toStartOf="@+id/Achteruit"
         android:onClick="LinksClick"/>
 
-    <ImageButton
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/Stop"
-        android:layout_below="@+id/Achteruit"
-        android:layout_centerHorizontal="true"
-        android:onClick="StopClick"/>
-
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Rijdt automatisch!"
-        android:id="@+id/button"
+        android:text="Start Drawing"
+        android:id="@+id/Drawing"
         android:layout_alignParentBottom="true"
         android:layout_alignParentStart="true"
         android:onClick="idk"/>
+
+    <Switch
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Drive manual"
+        android:id="@+id/switch1"
+        android:layout_below="@+id/OpenBluetoothSettings"
+        android:layout_centerHorizontal="true"
+        android:checked="false" />
 
 </RelativeLayout>

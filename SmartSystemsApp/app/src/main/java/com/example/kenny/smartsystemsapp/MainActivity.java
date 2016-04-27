@@ -8,8 +8,10 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.Switch;
 
 import java.io.IOException;
 
@@ -45,38 +47,45 @@ public class MainActivity extends AppCompatActivity {
         rechts.getLayoutParams().height = 300;
         rechts.getLayoutParams().width = 300;
 
-        //Stop
-        ImageButton stop = (ImageButton) findViewById(R.id.Stop);
-        stop.setImageResource(R.drawable.stop);
-        stop.getLayoutParams().height = 300;
-        stop.getLayoutParams().width = 900;
+        //Draw
+        Button draw = (Button) findViewById(R.id.Drawing);
 
-        //ontouchbutton test
-        Button test = (Button) findViewById(R.id.button);
-        test.setOnTouchListener(new View.OnTouchListener() {
+        //Switch
+        final Switch togglestate = (Switch) findViewById(R.id.switch1);
+        togglestate.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
-            public boolean onTouch(View view, MotionEvent motionEvent) {
-                if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    togglestate.setText("Driving automatic");
                     try {
-
-                        btcon.send("3".toString().getBytes());
-                        Log.i("notpressed","not pressed");
+                        btcon.send("6".toString().getBytes());
                     } catch (IOException | BluetoothConnection.BluetoothConnectionException e) {
                         Log.e("Oxygen Bluetooth", "exception: " + e);
                     }
                 }
-                if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
+                else {
+                    togglestate.setText("Driving manual");
                     try {
-                        btcon.send("5".toString().getBytes());
-                        Log.i("pressed", "pressed");
+                        btcon.send("7".toString().getBytes());
                     } catch (IOException | BluetoothConnection.BluetoothConnectionException e) {
                         Log.e("Oxygen Bluetooth", "exception: " + e);
                     }
                 }
-                return true;
-        }
-
+            }
         });
+
+        //draw function
+        draw.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+                    btcon.send("8".toString().getBytes());
+                } catch (IOException | BluetoothConnection.BluetoothConnectionException e) {
+                    Log.e("Oxygen Bluetooth", "exception: " + e);
+                }
+            }
+        });
+
 
         //Vooruit ontouchevent
         vooruit.setOnTouchListener(new View.OnTouchListener() {
@@ -164,30 +173,6 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             }
         });
-
-        stop.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View view, MotionEvent motionEvent) {
-                if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
-                    try {
-                        btcon.send("3".toString().getBytes());
-                    } catch (IOException | BluetoothConnection.BluetoothConnectionException e) {
-                        Log.e("Oxygen Bluetooth", "exception: " + e);
-                    }
-                }
-                if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
-                    try{
-                        btcon.send("3".toString().getBytes());
-                    } catch (IOException | BluetoothConnection.BluetoothConnectionException e) {
-                        Log.e("Oxygen Bluetooth", "exception: " + e);
-                    }
-                }
-                return true;
-            }
-        });
-
-
-
         }
 
     //open bluetooth settings om manueel met de HC-05 te connecten
@@ -197,12 +182,5 @@ public class MainActivity extends AppCompatActivity {
         }  catch (BluetoothConnection.BluetoothConnectionException e){
             Log.e("Bluetooth","fout",e);
         }
-        new Thread(new Runnable() {
-            @Override
-            public void run(){
-
-
-            }}).start();
-
     }
 }
