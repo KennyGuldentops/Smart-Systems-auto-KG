@@ -7,42 +7,44 @@ int enable2Pin = 5; // pin 9 on L293D IC
 int motor2Pin1 = 6; // pin 10 on L293D IC
 int motor2Pin2 = 7; // pin 15 on L293D IC
 
-int state;      // kiest uit vooruit / achteruit / links / rechts (bluetooth)
+int state;         // kiest uit vooruit / achteruit / links / rechts (bluetooth)
 int flag=0;        //zorgt ervoor dat de status maar 1x geprint wordt
  
-bool Automatic = false;
-bool Tekenen = false;
-bool Manueel = true;
-bool scherpebocht = false;
+bool Automatic = false;         //Bluetooth inputs
+bool Tekenen = false;           //
+bool Manueel = true;            //
 
-  boolean start = true;
-   boolean  Links = false;
-#define trigPin 9    //sensor vooraan   //SENSOR PINNEN
-#define echoPin 8    //sensor vooraan
+unsigned long previousMillis = 0;  //Timers voor tekenen
+const long interval = 1800;        // draai interval en vooruitrijden
+boolean voor = true;               // automatisch rijden
+boolean lnks = false;              //
+boolean rchts = false;             //
+int tellerke = 1;                  //Tellers
+int detected = 0;                  //
+
+#define trigPinvooraan 9    //sensor vooraan   //SENSOR PINNEN
+#define echoPinvooraan 8    //sensor vooraan
 
 #define trigPinLinks 11 //sensor rechts
 #define echoPinLinks 10 //sensor rechts
 
 #define trigPinRechts 13  //sensor links
 #define echoPinRechts 12  //sensor links  
-unsigned long previousMillis = 0;
-const long interval = 1000;
-  boolean voor = true;
-  boolean lnks = false;
-  boolean rchts = false;
-  int tellerke = 1;
 
 void setup() {
+    //Motors
     pinMode(motor1Pin1, OUTPUT);
     pinMode(motor1Pin2, OUTPUT);
     pinMode(enable1Pin, OUTPUT);
     pinMode(motor2Pin1, OUTPUT);
     pinMode(motor2Pin2, OUTPUT);
     pinMode(enable2Pin, OUTPUT);
-    pinMode(trigPin, OUTPUT);
-    pinMode(echoPin, INPUT);
     digitalWrite(enable1Pin, HIGH);
     digitalWrite(enable2Pin, HIGH);
+    //Sensors
+    pinMode(trigPinvooraan, OUTPUT);
+    pinMode(echoPinvooraan, INPUT);
+
     Serial.begin(9600);
 }
 
@@ -50,110 +52,97 @@ void loop() {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////BLUETOOTH//////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
- //Als er data is zal deze uitgelezen worden 
+//Als er data is zal deze uitgelezen worden 
     if(Serial.available() > 0){     
       state = Serial.read();   
       flag=0;
     } 
  
 //Mode meegeven
-if(state == '6'){ Automatic = true; Tekenen = false; Manueel = false; STOP();}
-else if(state == '7'){Manueel = true; Automatic = false; Tekenen = false; STOP(); }
-else if(state == '8'){Tekenen = true; Automatic = false; Manueel = false; }
-else if(state == '9') {Tekenen = false; STOP(); voor = false; rchts = false; lnks = false; tellerke = 1;}
 
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////AUTOMATICH RIJDEN//////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-/*
-  if(Automatic == true){
-   Serial.println("Automatisch aan het rijden");
-   
-   //Wat als sensor vanvoor iets detecteert
-   if (distance < 10) {
-   if(distancerechts > distancelinks){RECHTS();}  
-   else if(distancelinks > distancerechts){LINKS();}
-   else if(distancelinks == distancelinks){RECHTS();}
-    
-  } else { VOORUIT(); }
-  
-  //Print status vooraan
-  if (distance >= 200 || distance <= 0){
-    Serial.println("Out of range");
-  }
-  else {
-    Serial.print(distance);
-    Serial.println(" cm");
-  }
-
-  //Wat als sensor links iets detecteert
-  if (distancelinks < 5) {  
-  RECHTSRONDAS();
-  }
-  
-  //Print status links
-  if (distancelinks >= 200 || distancelinks <= 0){
-    Serial.println("Out of range");
-  }
-  else {
-    Serial.print(distancelinks);
-    Serial.println(" cm links");
-  }
-
-  //Wat als sensor rechts iets detecteert
-  if (distancerechts < 5) {  
-    LINKSRONDAS();
-  } 
-  
-  //Print status rechts
-  if (distancerechts >= 200 || distancerechts <= 0){
-    Serial.println("Out of range");
-  }
-  else {
-    Serial.print(distancerechts);
-    Serial.println(" cm rechts");
-  }
-}
-
-*/
+if(state == '8'){Tekenen = true;  Manueel = false; STOP();}
+else if(state == '9'){Tekenen = false; STOP(); voor = false; rchts = false; lnks = false; tellerke = 1; Manueel = true;}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////TEKENEN////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 if(Tekenen == true){
+  //Timer
+
   unsigned long currentMillis = millis();
+  //Sensors detecteren vanaf tekenen actief is
+ /* long durationvooraan, distancevooraan;
+  digitalWrite(trigPinvooraan, LOW);  // Added this line
+  delayMicroseconds(2); // Added this line
+  digitalWrite(trigPinvooraan, HIGH);
+  delayMicroseconds(10); // Added this line
+  digitalWrite(trigPinvooraan, LOW);
+  durationvooraan = pulseIn(echoPinvooraan, HIGH);
+  distancevooraan = (durationvooraan/2) / 29.1;
+  //serial prints van distance
+      if (distancevooraan >= 200 || distancevooraan <= 0)
+      {
+        Serial.println("Out of range");
+      }
+      else 
+      {
+        Serial.print(distancevooraan);
+        Serial.println(" cm");
+      }
+
+  
+  //ALS VOORAAN DETECTED///////////////////////////////////////////////////////////
+  if (distancevooraan < 10) 
+  {
+      STOP();
+      detected++;
+      delay(3000);
+      currentMillis = currentMillis-3000;
+      detected++;
+      Serial.println("something deteted");
+      if(detected > 2)
+      {
+        LINKS();
+        delay(1400);
+        detected = 0;
+      }
+  }
+  //ALS NIKS ERVOOR STAAT///////////////////AUTOMATISCH RIJDEN/////////////////////
+  else 
+  {*/
     if(voor)
     VOORUIT();
-   if (voor&&(unsigned long)(currentMillis - previousMillis) >= interval) {
-      voor = false;
-      if(tellerke == 4)
-      tellerke = 0;
-      if(tellerke < 2){
-      lnks = true;}
-      else if(lnks == false&&tellerke <4){
-        rchts = true;
-        }
-      previousMillis = currentMillis;
-   }
+       if (voor&&(unsigned long)(currentMillis - previousMillis) >= interval) 
+       {
+          voor = false;
+                if(tellerke == 4)
+                tellerke = 0;
+                      if(tellerke < 2){
+                      lnks = true;}
+                      else if(lnks == false&&tellerke <4){
+                        rchts = true;
+                        }
+          previousMillis = currentMillis;
+       }
    if(lnks)
     LINKS();
-  if (lnks&&(unsigned long)(currentMillis - previousMillis) >= interval) {
-      lnks= false;
-      voor=true;
-      tellerke++;
-      previousMillis = currentMillis;
-  }
+       if (lnks&&(unsigned long)(currentMillis - previousMillis) >= interval) 
+       {
+          lnks= false;
+          voor=true;
+          tellerke++;
+          previousMillis = currentMillis;
+       }
   if(rchts)
   RECHTS();
-  if (rchts&&(unsigned long)(currentMillis - previousMillis) >= interval) {
-      rchts= false;
-      voor=true;
-      tellerke++;
-      previousMillis = currentMillis;
-  }
-     
+      if (rchts&&(unsigned long)(currentMillis - previousMillis) >= (interval-200)) 
+      {
+          rchts= false;
+          voor=true;
+          tellerke++;
+          previousMillis = currentMillis;
+      }
+// }
 }
 
   
@@ -161,7 +150,8 @@ if(Tekenen == true){
 ///////////////////////////////////////////////////////////////////////MANUEEL RIJDEN//////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-//if (Manueel == true) {
+if (Manueel == true) {
+
     // Als de status 1 is zal het autotje achteruit rijden
     if (state == '1') {
        ACHTERUIT();
@@ -182,9 +172,17 @@ if(Tekenen == true){
     else if (state == '5') {
        VOORUIT();
     }
-  //}
+  }
   //Einde van de loop
 }
+
+
+
+
+
+
+
+
 
 
 //Methodes
