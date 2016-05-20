@@ -87,8 +87,8 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
-        //Vooruit ontouchevent
-        vooruit.setOnTouchListener(new View.OnTouchListener() {
+        //achteruit ontouchevent
+        achteruit.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View view, MotionEvent motionEvent) {
                 if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
@@ -109,8 +109,8 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        //achteruit ontouchevent
-        achteruit.setOnTouchListener(new View.OnTouchListener() {
+        //vooruit ontouchevent
+        vooruit.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View view, MotionEvent motionEvent) {
                 if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
@@ -144,7 +144,7 @@ public class MainActivity extends AppCompatActivity {
                 }
                 if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
                     try{
-                        btcon.send("4".toString().getBytes());
+                         btcon.send("4".toString().getBytes());
                     } catch (IOException | BluetoothConnection.BluetoothConnectionException e) {
                         Log.e("Oxygen Bluetooth", "exception: " + e);
                     }
@@ -181,6 +181,14 @@ public class MainActivity extends AppCompatActivity {
             btcon.connect();
         }  catch (BluetoothConnection.BluetoothConnectionException e){
             Log.e("Bluetooth","fout",e);
+        }
+    }
+
+    public void Stopdrawing(View view) {
+        try {
+            btcon.send("9".toString().getBytes());
+        } catch (IOException | BluetoothConnection.BluetoothConnectionException e) {
+            Log.e("Oxygen Bluetooth", "exception: " + e);
         }
     }
 }

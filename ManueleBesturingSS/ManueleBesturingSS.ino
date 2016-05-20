@@ -1,26 +1,36 @@
-
 // Initializeren van den pinnen en waarmee ze verbonden zijn
+int enable1Pin = 2; // pin 1 on L293D IC
 int motor1Pin1 = 3; // pin 2 on L293D IC
 int motor1Pin2 = 4; // pin 7 on L293D IC
-int enable1Pin = 6; // pin 1 on L293D IC
-int motor2Pin1 = 8; // pin 10 on L293D IC
-int motor2Pin2 = 9; // pin 15 on L293D IC
-int enable2Pin = 11; // pin 9 on L293D IC
+
+int enable2Pin = 5; // pin 9 on L293D IC
+int motor2Pin1 = 6; // pin 10 on L293D IC
+int motor2Pin2 = 7; // pin 15 on L293D IC
+
 int state;      // kiest uit vooruit / achteruit / links / rechts (bluetooth)
 int flag=0;        //zorgt ervoor dat de status maar 1x geprint wordt
-
+ 
 bool Automatic = false;
 bool Tekenen = false;
 bool Manueel = true;
 bool scherpebocht = false;
 
-#define trigPin 2       //SENSOR PINNEN
-#define echoPin 5
-#define trigPinLinks 7
-#define echoPinLinks 10 
-#define trigPinRechts 13
-#define echoPinRechts 12    //////                                           
+  boolean start = true;
+   boolean  Links = false;
+#define trigPin 9    //sensor vooraan   //SENSOR PINNEN
+#define echoPin 8    //sensor vooraan
 
+#define trigPinLinks 11 //sensor rechts
+#define echoPinLinks 10 //sensor rechts
+
+#define trigPinRechts 13  //sensor links
+#define echoPinRechts 12  //sensor links  
+unsigned long previousMillis = 0;
+const long interval = 1000;
+  boolean voor = true;
+  boolean lnks = false;
+  boolean rchts = false;
+  int tellerke = 1;
 
 void setup() {
     pinMode(motor1Pin1, OUTPUT);
@@ -37,8 +47,6 @@ void setup() {
 }
 
 void loop() {
-
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////BLUETOOTH//////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -48,34 +56,44 @@ void loop() {
       flag=0;
     } 
  
-
-if(state == '6'){ Automatic = true; Tekenen = false; Manueel = false;}
-else if(state == '7'){Manueel = true; Automatic = false; Tekenen = false; }
+//Mode meegeven
+if(state == '6'){ Automatic = true; Tekenen = false; Manueel = false; STOP();}
+else if(state == '7'){Manueel = true; Automatic = false; Tekenen = false; STOP(); }
 else if(state == '8'){Tekenen = true; Automatic = false; Manueel = false; }
-
+else if(state == '9') {Tekenen = false; STOP(); voor = false; rchts = false; lnks = false; tellerke = 1;}
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////AUTOMATICH RIJDEN//////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/*
+  if(Automatic == true){
+   Serial.println("Automatisch aan het rijden");
+   
+   //Wat als sensor vanvoor iets detecteert
+   if (distance < 10) {
+   if(distancerechts > distancelinks){RECHTS();}  
+   else if(distancelinks > distancerechts){LINKS();}
+   else if(distancelinks == distancelinks){RECHTS();}
+    
+  } else { VOORUIT(); }
+  
+  //Print status vooraan
+  if (distance >= 200 || distance <= 0){
+    Serial.println("Out of range");
+  }
+  else {
+    Serial.print(distance);
+    Serial.println(" cm");
+  }
 
-if(Automatic == true){
-   Serial.println("AUTOMATISCH");
-
-/////////////////////////////////////////////Sensor LINKSVOOR/////////////////////////////////////
-long durationlinks, distancelinks;
-  digitalWrite(trigPinLinks, LOW); 
-  delayMicroseconds(2); 
-  digitalWrite(trigPinLinks, HIGH);
-  delayMicroseconds(10); 
-  digitalWrite(trigPinLinks, LOW);
-  durationlinks = pulseIn(echoPinLinks, HIGH);
-  distancelinks = (durationlinks/2) / 29.1;
-                                                if (distancelinks < 5) {  
-                                                  RECHTSRONDAS();
-                                                }
-  ///////////// SERIAL PRINT //////////////////
+  //Wat als sensor links iets detecteert
+  if (distancelinks < 5) {  
+  RECHTSRONDAS();
+  }
+  
+  //Print status links
   if (distancelinks >= 200 || distancelinks <= 0){
     Serial.println("Out of range");
   }
@@ -83,20 +101,13 @@ long durationlinks, distancelinks;
     Serial.print(distancelinks);
     Serial.println(" cm links");
   }
-  delay(500);
-  /////////////////////////////////////////////Sensor RECHTSSVOOR//////////////////////////////
-long durationrechts, distancerechts;
-  digitalWrite(trigPinRechts, LOW); 
-  delayMicroseconds(2);
-  digitalWrite(trigPinRechts, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(trigPinRechts, LOW);
-  durationrechts = pulseIn(echoPinRechts, HIGH);
-  distancerechts = (durationrechts/2) / 29.1;
-                                                  if (distancerechts < 5) {  
-                                                       LINKSRONDAS();
-                                                  } 
-  ///////////// SERIAL PRINT //////////////////
+
+  //Wat als sensor rechts iets detecteert
+  if (distancerechts < 5) {  
+    LINKSRONDAS();
+  } 
+  
+  //Print status rechts
   if (distancerechts >= 200 || distancerechts <= 0){
     Serial.println("Out of range");
   }
@@ -104,211 +115,121 @@ long durationrechts, distancerechts;
     Serial.print(distancerechts);
     Serial.println(" cm rechts");
   }
-  delay(500);
-    //////////////////////////////////////////////Sesnor VOORAAN///////////////////////////////
-long duration, distance;
-  digitalWrite(trigPin, LOW); 
-  delayMicroseconds(2); 
-  digitalWrite(trigPin, HIGH);
-  delayMicroseconds(10); 
-  digitalWrite(trigPin, LOW);
-  duration = pulseIn(echoPin, HIGH);
-  distance = (duration/2) / 29.1;
-  if (distance < 10) {
-   if(distancerechts > distancelinks){RECHTS();}  
-   else if(distancelinks > distancerechts){LINKS();}
-   else if(distancelinks == distancelinks){RECHTS();}
-    
-  }else{
-  VOORUIT();
-  }
-
-   ///////////// SERIAL PRINT //////////////////
-  if (distance >= 200 || distance <= 0){
-    Serial.println("Out of range");
-  }
-  else {
-    Serial.print(distance);
-    Serial.println(" cm");
-  }
-  delay(500);
 }
 
-
+*/
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////TEKENEN////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 if(Tekenen == true){
-  Serial.println("Tekenen");
-
-/////////////////////////////////////////////Sensor RECHTS ACHTERAAN /////////////////////////////////////
-long durationRA, distanceRA;
-long durationRV, distanceRV;
-  digitalWrite(trigPinLinks, LOW);  // Added this line
-  delayMicroseconds(2); // Added this line
-  digitalWrite(trigPinLinks, HIGH);
-//  delayMicroseconds(1000); - Removed this line
-  delayMicroseconds(10); // Added this line
-  digitalWrite(trigPinLinks, LOW);
-  durationRA = pulseIn(echoPinLinks, HIGH);
-  distanceRA = (durationRA/2) / 29.1;
-  if (distanceRA < distanceRV) {  
- RECHTSRONDAS();
-}
-  if (distanceRA >= 200 || distanceRA <= 0){
-    Serial.println("Out of range");
+  unsigned long currentMillis = millis();
+    if(voor)
+    VOORUIT();
+   if (voor&&(unsigned long)(currentMillis - previousMillis) >= interval) {
+      voor = false;
+      if(tellerke == 4)
+      tellerke = 0;
+      if(tellerke < 2){
+      lnks = true;}
+      else if(lnks == false&&tellerke <4){
+        rchts = true;
+        }
+      previousMillis = currentMillis;
+   }
+   if(lnks)
+    LINKS();
+  if (lnks&&(unsigned long)(currentMillis - previousMillis) >= interval) {
+      lnks= false;
+      voor=true;
+      tellerke++;
+      previousMillis = currentMillis;
   }
-  else {
-    Serial.print(distanceRA);
-    Serial.println(" cm RA");
+  if(rchts)
+  RECHTS();
+  if (rchts&&(unsigned long)(currentMillis - previousMillis) >= interval) {
+      rchts= false;
+      voor=true;
+      tellerke++;
+      previousMillis = currentMillis;
   }
-  delay(500);
-  /////////////////////////////////////////////Sensor RECHTS VOORAAN //////////////////////////////
-
-
-  digitalWrite(trigPinRechts, LOW);  // Added this line
-  delayMicroseconds(2); // Added this line
-  digitalWrite(trigPinRechts, HIGH);
-//  delayMicroseconds(1000); - Removed this line
-  delayMicroseconds(10); // Added this line
-  digitalWrite(trigPinRechts, LOW);
-  durationRV = pulseIn(echoPinRechts, HIGH);
-  distanceRV = (durationRV/2) / 29.1;
-  if (distanceRV < distanceRA) {  
- LINKSRONDAS();
-}
-  if (distanceRV >= 200 || distanceRV <= 0){
-    Serial.println("Out of range");
-  }
-  else {
-    Serial.print(distanceRV);
-    Serial.println(" cm RV");
-  }
-  delay(500);
-
-  //////////////////////////////////////////////Sesnor VOORAAN VOOR TEKENEN///////////////////////////////
-long duration, distance;
-  digitalWrite(trigPin, LOW);  // Added this line
-  delayMicroseconds(2); // Added this line
-  digitalWrite(trigPin, HIGH);
-//  delayMicroseconds(1000); - Removed this line
-  delayMicroseconds(10); // Added this line
-  digitalWrite(trigPin, LOW);
-  duration = pulseIn(echoPin, HIGH);
-  distance = (duration/2) / 29.1;
-  if (distanceRA == distanceRV) {
-   VOORUIT();
- 
-}
-  if (distance >= 200 || distance <= 0){
-    Serial.println("Out of range");
-  }
-  else {
-    Serial.print(distance);
-    Serial.println(" cm");
-  }
-  delay(500);
+     
 }
 
-
-
-
+  
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////MANUEEL RIJDEN//////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-
-if(Manueel == true){
-   Serial.println("Manueel");
-
-    // Als de status 1 is zal het autotje vooruit rijden
+//if (Manueel == true) {
+    // Als de status 1 is zal het autotje achteruit rijden
     if (state == '1') {
-       VOORUIT();
-        if(flag == 0){
-          Serial.println("Go Forward!");
-          flag=1;
-        }
-    }
-    
+       ACHTERUIT();
+    } 
     // Als de status 2 is zal het autotje Rechts draaien
     else if (state == '2') {
-        RECHTSRONDAS();
-        if(flag == 0){
-          Serial.println("Go Forward!");
-          flag=1;
-        }
+       RECHTSRONDAS();
     }
-    
     // Als de status 3 is zal het autotje stoppen. 
     else if (state == '3') {
-        STOP();
-        if(flag == 0){
-          Serial.println("STOP!");
-          flag=1;
-        }
-        
+       STOP();
     }
     // Als de status 2 is zal het autotje links draaien
     else if (state == '4') {
-        LINKSRONDAS();
-        if(flag == 0){
-          Serial.println("Go Forward!");
-          flag=1;
-        }
+       LINKSRONDAS();
     }
-    // Als de status 1 is zal het autotje achteruit rijden
+    // Als de status 5 is zal het autotje vooruit rijden
     else if (state == '5') {
-        ACHTERUIT();
-        if(flag == 0){
-          Serial.println("Reverse!");
-          flag=1;
-        }
+       VOORUIT();
     }
- 
+  //}
+  //Einde van de loop
 }
-}
+
 
 //Methodes
-
 void LINKS(){
-        digitalWrite(motor1Pin1, HIGH); 
+        digitalWrite(motor1Pin1, LOW); 
         digitalWrite(motor1Pin2, LOW); 
-        digitalWrite(motor2Pin1, LOW);
-        digitalWrite(motor2Pin2, LOW);
-        if(Tekenen == true ){
-          delay(975);
+        digitalWrite(motor2Pin1, HIGH);
+        digitalWrite(motor2Pin2, LOW); 
+        if(flag == 0){
+          Serial.println("Links");
+          flag=1;
         }
   }
 
 void RECHTS(){
         digitalWrite(motor1Pin1, LOW); 
-        digitalWrite(motor1Pin2, LOW); 
+        digitalWrite(motor1Pin2, HIGH); 
         digitalWrite(motor2Pin1, LOW);
-        digitalWrite(motor2Pin2, HIGH);
-        if(Tekenen == true ){
-          delay(975);
-        }
-  }
-
-void VOORUIT(){
-        digitalWrite(motor1Pin1, HIGH);
-        digitalWrite(motor1Pin2, LOW); 
-        digitalWrite(motor2Pin1, LOW);
-        digitalWrite(motor2Pin2, HIGH);
-        if(Tekenen == true ){
-          delay(2500);
-          RECHTS();
+        digitalWrite(motor2Pin2, LOW);
+        if(flag == 0){
+          Serial.println("Rechts");
+          flag=1;
         }
   }
 
 void ACHTERUIT(){
+        digitalWrite(motor1Pin1, HIGH);
+        digitalWrite(motor1Pin2, LOW); 
+        digitalWrite(motor2Pin1, LOW);
+        digitalWrite(motor2Pin2, HIGH);
+        if(flag == 0){
+          Serial.println("Achteruit!");
+          flag=1;
+        }
+  }
+
+void VOORUIT(){
         digitalWrite(motor1Pin1, LOW); 
         digitalWrite(motor1Pin2, HIGH);
         digitalWrite(motor2Pin1, HIGH);
         digitalWrite(motor2Pin2, LOW);
+         if(flag == 0){
+          Serial.println("Vooruit!");
+          flag=1;
+        }
   }
 
 void STOP(){
@@ -316,18 +237,29 @@ void STOP(){
         digitalWrite(motor1Pin2, LOW); 
         digitalWrite(motor2Pin1, LOW);
         digitalWrite(motor2Pin2, LOW);
+        if(flag == 0){
+          Serial.println("STOP!");
+          flag=1;
+        }
   }
 void RECHTSRONDAS(){
         digitalWrite(motor1Pin1, LOW); 
         digitalWrite(motor1Pin2, HIGH); 
         digitalWrite(motor2Pin1, LOW);
         digitalWrite(motor2Pin2, HIGH);
+         if(flag == 0){
+          Serial.println("Rechts aan het draaien!");
+          flag=1;
+        }
   }
 void LINKSRONDAS(){
         digitalWrite(motor1Pin1, HIGH); 
         digitalWrite(motor1Pin2, LOW); 
         digitalWrite(motor2Pin1, HIGH);
         digitalWrite(motor2Pin2, LOW);
+         if(flag == 0){
+          Serial.println("Links aan het draaien!");
+          flag=1;
+        }
   }
-
   

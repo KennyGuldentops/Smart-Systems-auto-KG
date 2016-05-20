@@ -77,4 +77,13 @@
         android:layout_centerHorizontal="true"
         android:checked="false" />
 
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Stop drawing"
+        android:id="@+id/button"
+        android:onClick="Stopdrawing"
+        android:layout_alignTop="@+id/Drawing"
+        android:layout_alignParentEnd="true" />
+
 </RelativeLayout>
